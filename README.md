@@ -12,14 +12,7 @@ The Braided Torus is often used in mathematical visualization and computer graph
 
 The parametric equations for the Braided Torus are as follows:
 
-\[
-\begin{cases}
-x = r \cos(v) \cos(u) + R \cos(u)(1 + a \cos(nu)) \\
-y = 2.5(r \sin(v) + a \sin(nu)) \\
-z = r \cos(v) \sin(u) + R \sin(u)(1 + a \cos(nu))
-\end{cases}
-\]
-
+![Image](https://github.com/user-attachments/assets/2cdf9ad6-9fb3-4315-ad42-c3d4580a3292)
 #### Variables:
 - \( R \): The major radius of the torus (distance from the center of the hole to the center of the tube).
 - \( r \): The minor radius of the torus (radius of the tube itself).
@@ -31,13 +24,7 @@ z = r \cos(v) \sin(u) + R \sin(u)(1 + a \cos(nu))
 #### Components:
 1. **Standard Torus**:
    - The standard torus equations are:
-     \[
-     \begin{cases}
-     x = (R + r \cos(v)) \cos(u) \\
-     y = r \sin(v) \\
-     z = (R + r \cos(v)) \sin(u)
-     \end{cases}
-     \]
+     ![Image](https://github.com/user-attachments/assets/a5cfb0ae-2926-4ea3-af06-892232e8d468)
    - These equations describe a circle of radius \( R \) (major radius) with a tube of radius \( r \) (minor radius) wrapped around it.
 
 2. **Braiding Modulation**:
