@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braided Torus</title>
+    <style>
+        body { 
+        margin: 0; 
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+        }
+        canvas { display: block; }
+        #infoButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .info-popup {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            width: 300px;
+            text-align: left;
+            user-select: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <button id="infoButton">&#9432;</button>
+    <div class="info-popup" id="infoPopup">
+        <p style="text-align:center;" ><strong>Braided Torus</strong></p>
+    <p style="color:pink; text-align: center;">A Braided Torus is a complex geometric shape that combines the structure of a standard torus (a doughnut-shaped surface) with a "braided" pattern. This braiding effect is achieved by modulating the standard torus equations with additional trigonometric functions, creating a more intricate and visually interesting surface. The braiding introduces a dynamic, woven appearance, giving the torus a sense of movement and depth.</p>
+            <p style="text-align:center;">For Equations visit my Github. Enjoy!</p>
+    </div>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Parameters for the Braided Torus
+        const R = 2; // Major radius
+        const r = 0.5; // Minor radius
+        const a = 0.2; // Modulation factor
+        const n = 5; // Number of braids
+        const segments = 150; // Number of segments for the torus
+
+        // Create geometry for the Braided Torus
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        const indices = [];
+
+        for (let i = 0; i <= segments; i++) {
+            const u = (i / segments) * 4 * Math.PI;
+            for (let j = 0; j <= segments; j++) {
+                const v = (j / segments) * 2 * Math.PI;
+                const x = r * Math.cos(v) * Math.cos(u) + R * Math.cos(u) * (1 + a * Math.cos(n * u));
+                const y = 2.5 * (r * Math.sin(v) + a * Math.sin(n * u));
+                const z = r * Math.cos(v) * Math.sin(u) + R * Math.sin(u) * (1 + a * Math.cos(n * u));
+                vertices.push(x, y, z);
+            }
+        }
+
+        // Create indices for the faces
+        for (let i = 0; i < segments; i++) {
+            for (let j = 0; j < segments; j++) {
+                const a = i * (segments + 1) + j;
+                const b = a + 1;
+                const c = (i + 1) * (segments + 1) + j;
+                const d = c + 1;
+                indices.push(a, b, d);
+                indices.push(a, d, c);
+            }
+        }
+
+        geometry.setIndex(indices);
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+        // Custom fragment shader for gradient colors
+        const fragmentShader = `
+            uniform float time;
+            varying vec3 vPosition;
+            void main() {
+                vec3 color1 = vec3(0.0, 0.5, 1.0);
+                vec3 color2 = vec3(1.0, 0.0, 0.5);
+                vec3 color3 = vec3(0.5, 1.0, 0.0);
+                float mixValue = sin(vPosition.x + time) * 0.5 + 0.5;
+                vec3 mixedColor = mix(color1, color2, mixValue);
+                mixedColor = mix(mixedColor, color3, sin(vPosition.y + time) * 0.5 + 0.5);
+                gl_FragColor = vec4(mixedColor, 1.0);
+            }
+        `;
+
+        // Vertex shader
+        const vertexShader = `
+            varying vec3 vPosition;
+            void main() {
+                vPosition = position;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        // Create shader material
+        const material = new THREE.ShaderMaterial({
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            uniforms: {
+                time: { value: 0.0 }
+            },
+            wireframe: true
+        });
+
+        const torus = new THREE.Mesh(geometry, material);
+        scene.add(torus);
+
+        // Space background with multi-colored stars
+        const starGeometry = new THREE.BufferGeometry();
+        const starVertices = [];
+        const starColors = [];
+        for (let i = 0; i < 1000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            starVertices.push(x, y, z);
+
+            // Assign random colors
+            const color = new THREE.Color();
+            color.setHSL(Math.random(), 1.0, 0.7);
+            starColors.push(color.r, color.g, color.b);
+        }
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+
+        const starMaterial = new THREE.PointsMaterial({ vertexColors: true, size: 2 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // Position the camera
+        camera.position.z = 10;
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            torus.rotation.x += 0.01;
+            torus.rotation.y += 0.01;
+            material.uniforms.time.value += 0.05;
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+          $("#infoButton").click(function() {
+            $("#infoPopup").fadeToggle();
+        });
+    </script>
+</body>
+  </html>
